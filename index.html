@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Studio · Accés</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --fg: #e0e0e0; --muted: #7a7a8a;
+      --accent: #00ff88; --accent2: #ff0055; --danger: #ff3366;
+      --border: rgba(0,255,136,0.15);
+      --input-bg: #0d0d1a; --modal-bg: #0d0d1a; --card-bg: #111122;
+      --sans: 'Syne', sans-serif; --serif: 'Cormorant Garamond', serif;
+      --gaming: 'Orbitron', sans-serif;
+      --role-admin: #00ff88; --role-editor: #ffaa00; --role-persona: #aa44ff;
+    }
+    body { background: var(--bg); color: var(--fg); font-family: var(--sans); overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; z-index: -2; background: radial-gradient(ellipse at 20% 20%, rgba(0,255,136,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(255,0,85,0.06) 0%, transparent 50%), linear-gradient(180deg, #0a0a0f 0%, #0d0d1a 50%, #0a0a0f 100%); }
+    body::after { content: ''; position: fixed; inset: 0; z-index: -1; opacity: 0.12; background-image: linear-gradient(rgba(0,255,136,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.1) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%); }
+    .scanlines { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px); }
+    
+    #login-screen { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    #login-screen.hidden { pointer-events: none; animation: fadeOut 0.6s ease forwards; }
+    @keyframes fadeOut { to { opacity:0; transform:scale(1.02); } }
+    .login-bg { position: fixed; inset: 0; z-index: -1; background-image: linear-gradient(rgba(0,255,136,0.1) 1px,transparent 1px), linear-gradient(90deg,rgba(0,255,136,0.1) 1px,transparent 1px); background-size: 50px 50px; mask-image: radial-gradient(ellipse 70% 70% at 50% 50%,black 0%,transparent 100%); }
+    .login-glow { position: fixed; inset: 0; z-index: -1; background: radial-gradient(ellipse 40% 40% at 30% 50%,rgba(0,255,136,0.08) 0%,transparent 70%), radial-gradient(ellipse 40% 40% at 70% 50%,rgba(255,0,85,0.06) 0%,transparent 70%); }
+    .login-box { width: 100%; max-width: 420px; animation: fadeUp 0.7s ease forwards; background: rgba(13,13,26,0.95); border: 1px solid var(--border); padding: 3rem 2.5rem; border-radius: 4px; box-shadow: 0 0 20px rgba(0,255,136,0.2); backdrop-filter: blur(20px); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+    .login-logo { font-family: var(--gaming); font-size: 36px; font-weight: 900; text-align: center; margin-bottom: 0.4rem; letter-spacing: 0.15em; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .login-tagline { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 2.5rem; font-family: var(--gaming); }
+    .field { margin-bottom: 1.2rem; }
+    .field label { display: block; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; font-family: var(--gaming); }
+    .field-wrap { position: relative; }
+    .field input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--fg); font-family: var(--sans); font-size: 14px; padding: 14px 44px 14px 16px; outline: none; transition: all 0.3s; border-radius: 2px; }
+    .field input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(0,255,136,0.15); }
+    .field input.error { border-color: var(--danger); }
+    .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+    .toggle-pw:hover { color: var(--accent); }
+    .error-msg { font-size: 11px; color: var(--danger); margin-top: 8px; display: none; font-family: var(--gaming); }
+    .error-msg.show { display: block; }
+    .btn-login { width: 100%; padding: 14px; background: transparent; color: var(--accent); font-family: var(--gaming); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; border: 2px solid var(--accent); cursor: pointer; margin-top: 0.8rem; transition: all 0.3s; border-radius: 2px; position: relative; overflow: hidden; }
+    .btn-login::before { content: ''; position: absolute; inset: 0; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease; z-index: -1; }
+    .btn-login:hover { color: #0a0a0f; }
+    .btn-login:hover::before { transform: scaleX(1); }
+    .btn-login.loading { opacity: 0.5; pointer-events: none; }
+    .register-link { text-align: center; margin-top: 1.5rem; font-size: 11px; color: var(--muted); font-family: var(--gaming); }
+    .register-link a { color: var(--accent); cursor: pointer; text-decoration: none; }
+    .register-link a:hover { text-decoration: underline; }
+    #register-form { display: none; margin-top: 1rem; }
+    #register-form.show { display: block; }
+    #login-form.hide { display: none; }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2.5rem; border-bottom: 1px solid var(--border); background: rgba(10,10,15,0.95); backdrop-filter: blur(20px); z-index: 200; }
+    .logo { font-family: var(--gaming); font-size: 20px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .nav-user { display: flex; align-items: center; gap: 8px; }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-admin { background: var(--role-admin); box-shadow: 0 0 12px var(--role-admin); }
+    .dot-editor { background: var(--role-editor); box-shadow: 0 0 12px var(--role-editor); }
+    .dot-persona { background: var(--role-persona); box-shadow: 0 0 12px var(--role-persona); }
+    .nav-username { font-size: 13px; font-family: var(--gaming); }
+    .nav-role { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; font-family: var(--gaming); }
+    .badge-admin  { background: rgba(0,255,136,0.15); color: var(--role-admin); border: 1px solid rgba(0,255,136,0.3); }
+    .badge-editor { background: rgba(255,170,0,0.15); color: var(--role-editor); border: 1px solid rgba(255,170,0,0.3); }
+    .badge-persona{ background: rgba(170,68,255,0.15); color: var(--role-persona); border: 1px solid rgba(170,68,255,0.3); }
+    .edit-badge { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; animation: pulse 2.5s infinite; font-family: var(--gaming); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .btn-nav { font-family: var(--gaming); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 16px; background: transparent; color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all 0.3s; }
+    .btn-nav:hover { color: var(--accent); border-color: var(--accent); }
+    .btn-save { color: var(--accent); border-color: var(--accent); }
+    .btn-save.saved { color: var(--accent2); border-color: var(--accent2); }
+
+    #role-banner { position: fixed; top: 66px; left: 0; right: 0; z-index: 198; padding: 10px 2.5rem; font-size: 11px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); font-family: var(--gaming); }
+    #role-banner.admin   { background: rgba(0,255,136,0.05); color: var(--role-admin); }
+    #role-banner.editor  { background: rgba(255,170,0,0.05); color: var(--role-editor); }
+    #role-banner.persona { background: rgba(170,68,255,0.05); color: var(--role-persona); }
+
+    #toolbar { position: fixed; top: 105px; left: 0; right: 0; display: none; align-items: center; gap: 6px; padding: 10px 2.5rem; background: var(--card-bg); border-bottom: 1px solid var(--border); z-index: 197; flex-wrap: wrap; }
+    #toolbar.visible { display: flex; }
+    .tb-btn { font-size: 12px; padding: 6px 12px; background: transparent; color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; font-family: var(--gaming); }
+    .tb-btn:hover { background: var(--accent); color: #0a0a0f; border-color: var(--accent); }
+    .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+    #hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 180px 2.5rem 4rem; position: relative; overflow: hidden; }
+    .hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 70% 30%,rgba(0,255,136,0.06) 0%,transparent 60%); }
+    .hero-tag { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; font-family: var(--gaming); }
+    .hero-title { font-family: var(--serif); font-size: clamp(48px,7vw,100px); font-weight: 300; line-height: 0.95; max-width: 820px; }
+    .hero-title em { font-style: italic; color: var(--accent); }
+    .hero-sub { margin-top: 2rem; font-size: 15px; color: var(--muted); max-width: 420px; line-height: 1.75; }
+
+    #main-content { outline: none; }
+    section.content-section { padding: 5rem 2.5rem; border-top: 1px solid var(--border); }
+    .section-label { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 2.5rem; font-family: var(--gaming); }
+    .blocks { display: flex; flex-direction: column; gap: 1.5rem; }
+    .block { position: relative; border: 1px solid transparent; border-radius: 3px; transition: all 0.3s; padding: 6px; }
+    .block:hover { border-color: rgba(0,255,136,0.15); }
+    .block.selected { border-color: var(--accent) !important; }
+    .block-toolbar { position: absolute; top: -36px; left: 0; display: none; align-items: center; gap: 4px; background: var(--card-bg); border: 1px solid var(--border); padding: 4px 6px; z-index: 10; border-radius: 3px; }
+    .block.selected .block-toolbar { display: flex; }
+    .bt-btn { font-size: 10px; padding: 4px 10px; background: transparent; color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; font-family: var(--gaming); }
+    .bt-btn:hover { background: var(--accent); color: #0a0a0f; border-color: var(--accent); }
+    [contenteditable] { outline: none; caret-color: var(--accent); }
+    [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: 0.3; }
+    .block-h1 { font-family: var(--serif); font-size: clamp(36px,5vw,64px); font-weight: 300; line-height: 1.1; }
+    .block-h2 { font-family: var(--serif); font-size: clamp(24px,3vw,40px); font-weight: 300; line-height: 1.2; }
+    .block-h3 { font-family: var(--gaming); font-size: 18px; font-weight: 500; color: var(--accent); }
+    .block-p  { font-size: 15px; color: var(--muted); line-height: 1.8; max-width: 640px; }
+    .block-quote { font-family: var(--serif); font-size: clamp(20px,2.5vw,28px); font-style: italic; color: var(--accent); border-left: 3px solid var(--accent); padding-left: 1.5rem; line-height: 1.5; }
+    .block-code { font-family: 'Courier New', monospace; font-size: 13px; background: var(--card-bg); border: 1px solid var(--border); padding: 1.25rem 1.5rem; color: var(--accent); white-space: pre-wrap; border-radius: 3px; overflow-x: auto; }
+    .block-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; pointer-events: none; }
+    .block-image { max-width: 100%; height: auto; cursor: pointer; border-radius: 3px; }
+    .block-image-placeholder { max-width: 100%; padding: 80px 40px; background: var(--card-bg); border: 2px dashed var(--border); color: var(--muted); text-align: center; cursor: pointer; font-size: 13px; font-family: var(--gaming); }
+    .block-image-placeholder:hover { border-color: var(--accent); color: var(--accent); }
+    .block-iframe { width: 100%; min-height: 400px; border: 1px solid var(--border); border-radius: 3px; background: var(--card-bg); }
+    .block-iframe-placeholder { width: 100%; padding: 80px 40px; background: var(--card-bg); border: 2px dashed var(--border); color: var(--muted); text-align: center; cursor: pointer; font-size: 13px; font-family: var(--gaming); }
+    .block-iframe-placeholder:hover { border-color: var(--accent); color: var(--accent); }
+    .block-pdf { width: 100%; min-height: 600px; border: 1px solid var(--border); border-radius: 3px; }
+    .block-pdf-placeholder { width: 100%; padding: 80px 40px; background: var(--card-bg); border: 2px dashed var(--border); color: var(--muted); text-align: center; cursor: pointer; font-size: 13px; font-family: var(--gaming); }
+    .block-pdf-placeholder:hover { border-color: var(--accent); color: var(--accent); }
+    .block-video { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--border); border-radius: 3px; }
+    .block-video-placeholder { width: 100%; padding: 80px 40px; background: var(--card-bg); border: 2px dashed var(--border); color: var(--muted); text-align: center; cursor: pointer; font-size: 13px; font-family: var(--gaming); }
+    .block-video-placeholder:hover { border-color: var(--accent); color: var(--accent); }
+    .code-locked { position: relative; }
+    .code-lock-overlay { position: absolute; inset: 0; background: rgba(10,10,15,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; backdrop-filter: blur(6px); font-family: var(--gaming); }
+    .code-lock-overlay .lock-icon { font-size: 28px; }
+    .add-block-btn { display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px dashed var(--border); padding: 14px 24px; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: 0.5rem; font-family: var(--gaming); }
+    .add-block-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .type-picker { display: none; flex-wrap: wrap; gap: 6px; padding: 14px; background: var(--card-bg); border: 1px solid var(--border); margin-top: 6px; border-radius: 3px; }
+    .type-picker.open { display: flex; }
+    .type-opt { font-size: 10px; padding: 8px 14px; background: transparent; color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; font-family: var(--gaming); }
+    .type-opt:hover { background: var(--accent); color: #0a0a0f; border-color: var(--accent); }
+
+    body.readonly [contenteditable] { pointer-events: none; user-select: text; }
+    body.readonly .block:hover { border-color: transparent; }
+    body.readonly .block-toolbar { display: none !important; }
+    body.readonly #toolbar { display: none !important; }
+    body.readonly .add-block-btn { display: none; }
+    body.readonly .type-picker { display: none !important; }
+    body.readonly .btn-save { display: none; }
+    body.readonly .edit-badge { display: none; }
+
+    footer { border-top: 1px solid var(--border); padding: 1.5rem 2.5rem; display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-family: var(--gaming); }
+    #toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--accent); color: #0a0a0f; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 12px 24px; border-radius: 3px; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 999; font-family: var(--gaming); }
+    #toast.show { opacity: 1; transform: none; }
+
+    #user-modal { position: fixed; inset: 0; z-index: 500; background: rgba(10,10,15,0.95); backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; padding: 2rem; }
+    #user-modal.open { display: flex; }
+    .modal-box { background: var(--modal-bg); border: 1px solid var(--border); width: 100%; max-width: 560px; max-height: 85vh; display: flex; flex-direction: column; animation: fadeUp 0.4s ease; border-radius: 4px; }
+    .modal-head { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--gaming); color: var(--accent); }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+    .modal-close:hover { color: var(--danger); }
+    .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+    .user-list { display: flex; flex-direction: column; gap: 8px; }
+    .user-row { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 12px 16px; border: 1px solid var(--border); }
+    .user-row-name { font-size: 13px; font-family: var(--gaming); }
+    .user-row-creds { font-size: 10px; color: var(--muted); }
+    .btn-del-user { background: none; border: 1px solid rgba(255,51,102,0.3); color: var(--danger); font-size: 10px; padding: 4px 10px; cursor: pointer; font-family: var(--gaming); }
+    .btn-del-user:hover { background: var(--danger); color: #fff; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+    .form-field label { display: block; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; font-family: var(--gaming); }
+    .form-field input, .form-field select { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--fg); font-family: var(--sans); font-size: 13px; padding: 10px 14px; outline: none; border-radius: 2px; }
+    .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
+    .form-field select option { background: var(--card-bg); }
+    .btn-add-user { padding: 11px; background: var(--accent2); color: #fff; font-family: var(--gaming); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; border: none; cursor: pointer; }
+    .btn-add-user:hover { opacity: 0.9; }
+    .form-error { font-size: 11px; color: var(--danger); display: none; font-family: var(--gaming); }
+    .form-error.show { display: block; }
+
+    @media (max-width: 768px) {
+      nav { flex-direction: column; gap: 0.75rem; padding: 1rem; }
+      #hero { padding: 160px 1rem 3rem; min-height: auto; }
+      section.content-section { padding: 3rem 1rem; }
+      .form-row { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; padding: 1rem; }
+      .block-iframe, .block-pdf { min-height: 250px; }
+    }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+  </style>
+</head>
+<body>
+
+<div class="scanlines" aria-hidden="true"></div>
+
+<div id="login-screen" role="dialog" aria-label="Inici de sessió">
+  <div class="login-bg" aria-hidden="true"></div>
+  <div class="login-glow" aria-hidden="true"></div>
+  <div class="login-box">
+    <div class="login-logo">STUDIO</div>
+    <p class="login-tagline">[ ACCÉS RESTRINGIT ]</p>
+    <div id="login-form">
+      <div class="field"><label for="inp-user">▸ Usuari</label><div class="field-wrap"><input type="text" id="inp-user" autocomplete="username" placeholder="nom d'usuari" /></div></div>
+      <div class="field"><label for="inp-pw">▸ Contrasenya</label><div class="field-wrap"><input type="password" id="inp-pw" autocomplete="current-password" placeholder="••••••••" /><button class="toggle-pw" onclick="togglePw()">👁️</button></div><p class="error-msg" id="login-error">Usuari o contrasenya incorrectes.</p></div>
+      <button class="btn-login" id="btn-login" onclick="doLogin()">[ ENTRAR ]</button>
+      <div class="register-link">No tens compte? <a onclick="showRegisterForm()">Registra't</a></div>
+    </div>
+    <div id="register-form">
+      <div class="field"><label for="reg-user">▸ Nou usuari</label><div class="field-wrap"><input type="text" id="reg-user" placeholder="nom d'usuari" /></div></div>
+      <div class="field"><label for="reg-pw">▸ Contrasenya</label><div class="field-wrap"><input type="password" id="reg-pw" placeholder="••••••••" /></div><p class="error-msg" id="reg-error"></p></div>
+      <button class="btn-login" id="btn-register" onclick="doRegister()">[ CREAR COMPTE ]</button>
+      <div class="register-link"><a onclick="showLoginForm()">← Tornar a l'accés</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="user-modal" role="dialog" aria-label="Gestió d'usuaris" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-head"><span class="modal-title">▸ Gestió d'usuaris</span><button class="modal-close" onclick="closeUserModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:10px;color:var(--accent2);font-family:var(--gaming);margin-bottom:1rem;">Usuaris actuals</p>
+      <div class="user-list" id="user-list"></div>
+      <p style="font-size:10px;color:var(--accent2);font-family:var(--gaming);margin:1.5rem 0 1rem;">Afegir nou usuari</p>
+      <div class="form-row">
+        <div class="form-field"><label>Nom d'usuari</label><input type="text" id="new-username" placeholder="usuari" /></div>
+        <div class="form-field"><label>Contrasenya</label><input type="password" id="new-password" placeholder="••••••" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Rang</label><select id="new-role"><option value="persona">Persona</option><option value="editor" id="opt-editor">Editor</option><option value="admin" id="opt-admin" style="display:none">Admin</option></select></div>
+        <div class="form-field" style="display:flex;align-items:flex-end"><button class="btn-add-user" style="width:100%" onclick="addUser()">+ Afegir</button></div>
+      </div>
+      <p class="form-error" id="form-error">Omple tots els camps.</p>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="toast">Desat ✓</div>
+  <nav>
+    <span class="logo">STUDIO</span>
+    <div class="nav-right">
+      <div class="nav-user"><span class="nav-dot" id="nav-dot"></span><span class="nav-username" id="nav-username"></span><span class="nav-role role-badge" id="nav-role-badge"></span></div>
+      <span class="edit-badge" id="edit-badge">● LIVE</span>
+      <button class="btn-nav" id="btn-manage-users" onclick="openUserModal()">Usuaris</button>
+      <button class="btn-nav btn-save" id="btn-save" onclick="saveContent()">Desar</button>
+      <button class="btn-nav" onclick="doLogout()">Sortir</button>
+    </div>
+  </nav>
+  <div id="role-banner"><span id="banner-icon"></span><span id="banner-text"></span></div>
+  <div id="toolbar">
+    <button class="tb-btn" onclick="fmt('bold')">B</button>
+    <button class="tb-btn" onclick="fmt('italic')">I</button>
+    <button class="tb-btn" onclick="fmt('underline')">U</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="fmt('justifyLeft')">⬅</button>
+    <button class="tb-btn" onclick="fmt('justifyCenter')">☰</button>
+    <button class="tb-btn" onclick="fmt('justifyRight')">➡</button>
+  </div>
+  <main id="main-content" tabindex="-1">
+    <section id="hero">
+      <div class="hero-bg"></div>
+      <p class="hero-tag" contenteditable="true" data-placeholder="Etiqueta...">— DISSENY & TECNOLOGIA · 2026</p>
+      <h1 class="hero-title" contenteditable="true" data-placeholder="Títol...">Creem coses<br /><em>extraordinàries</em><br />per la web</h1>
+      <p class="hero-sub" contenteditable="true" data-placeholder="Descripció...">Un estudi de disseny digital. Jocs, PDFs, vídeos i més.</p>
+    </section>
+    <section class="content-section">
+      <p class="section-label" contenteditable="true" data-placeholder="Etiqueta secció...">[ CONTINGUT PRINCIPAL ]</p>
+      <div class="blocks" id="blocks-container"></div>
+      <button class="add-block-btn" id="add-btn" onclick="togglePicker()">+ Afegir bloc</button>
+      <div class="type-picker" id="type-picker">
+        <button class="type-opt" onclick="addBlock('h1')">Títol H1</button>
+        <button class="type-opt" onclick="addBlock('h2')">Títol H2</button>
+        <button class="type-opt" onclick="addBlock('h3')">Títol H3</button>
+        <button class="type-opt" onclick="addBlock('p')">Paràgraf</button>
+        <button class="type-opt" onclick="addBlock('quote')">Cita</button>
+        <button class="type-opt" id="type-opt-code" onclick="addBlock('code')">Codi</button>
+        <button class="type-opt" onclick="addBlock('image')">Imatge</button>
+        <button class="type-opt" onclick="addBlock('iframe')">🎮 Iframe (jocs)</button>
+        <button class="type-opt" onclick="addBlock('pdf')">📄 PDF</button>
+        <button class="type-opt" onclick="addBlock('video')">🎬 Vídeo</button>
+        <button class="type-opt" onclick="addBlock('divider')">Separador</button>
+      </div>
+    </section>
+  </main>
+  <footer><span contenteditable="true">© 2026 STUDIO</span><span contenteditable="true">Barcelona, Catalunya</span></footer>
+</div>
+
+<script>
+  const DEFAULT_USERS = {
+    'aran':    { password: 'disseny2026', role: 'admin' },
+    'nil':     { password: 'bcneditora',  role: 'editor' },
+    'convidat':{ password: 'visita2026',  role: 'persona' },
+  };
+
+  function getUsers() { try { const r = localStorage.getItem('studio-users'); return r ? JSON.parse(r) : {...DEFAULT_USERS}; } catch(e) { return {...DEFAULT_USERS}; } }
+  function saveUsers(u) { localStorage.setItem('studio-users', JSON.stringify(u)); }
+
+  const ROLE_CONFIG = {
+    admin:  { label:'Admin',   badgeClass:'badge-admin',   dotClass:'dot-admin',   bannerClass:'admin',   icon:'🛡️', text:'Rang Admin — accés total.' },
+    editor: { label:'Editor',  badgeClass:'badge-editor',  dotClass:'dot-editor',  bannerClass:'editor',  icon:'✏️', text:'Rang Editor — editar contingut.' },
+    persona:{ label:'Persona', badgeClass:'badge-persona', dotClass:'dot-persona', bannerClass:'persona', icon:'👁️', text:'Rang Persona — només lectura.' },
+  };
+
+  let currentRole = null, currentUser = null, autosaveTimer = null, selectedBlock = null;
+  const container = document.getElementById('blocks-container');
+
+  function showRegisterForm() { document.getElementById('login-form').classList.add('hide'); document.getElementById('register-form').classList.add('show'); }
+  function showLoginForm() { document.getElementById('login-form').classList.remove('hide'); document.getElementById('register-form').classList.remove('show'); }
+
+  function doLogin() {
+    const user = document.getElementById('inp-user').value.trim(), pw = document.getElementById('inp-pw').value;
+    const err = document.getElementById('login-error'), btn = document.getElementById('btn-login');
+    err.classList.remove('show');
+    if (!user || !pw) { err.textContent = '⚠ Omple tots els camps.'; err.classList.add('show'); return; }
+    btn.textContent = '[ VERIFICANT... ]'; btn.classList.add('loading');
+    setTimeout(() => {
+      const users = getUsers();
+      if (users[user] && users[user].password === pw) {
+        sessionStorage.setItem('studio-user', user);
+        applyRole(user, users[user].role);
+        document.getElementById('login-screen').classList.add('hidden');
+        setTimeout(() => { document.getElementById('login-screen').style.display = 'none'; showApp(); }, 600);
+      } else {
+        err.textContent = '⚠ Usuari o contrasenya incorrectes.'; err.classList.add('show');
+        btn.textContent = '[ ENTRAR ]'; btn.classList.remove('loading');
+      }
+    }, 300);
+  }
+
+  function doRegister() {
+    const username = document.getElementById('reg-user').value.trim(), password = document.getElementById('reg-pw').value.trim();
+    const err = document.getElementById('reg-error');
+    err.classList.remove('show');
+    if (!username || !password) { err.textContent = '⚠ Omple tots els camps.'; err.classList.add('show'); return; }
+    if (password.length < 3) { err.textContent = '⚠ Contrasenya mínim 3 caràcters.'; err.classList.add('show'); return; }
+    const users = getUsers();
+    if (users[username]) { err.textContent = '⚠ Aquest usuari ja existeix.'; err.classList.add('show'); return; }
+    users[username] = { password, role: 'persona' };
+    saveUsers(users);
+    showToast('Compte creat! Ja pots entrar.');
+    showLoginForm();
+    document.getElementById('inp-user').value = username;
+  }
+
+  function applyRole(username, role) {
+    currentRole = role; currentUser = username;
+    const cfg = ROLE_CONFIG[role];
+    document.getElementById('nav-username').textContent = username;
+    const badge = document.getElementById('nav-role-badge');
+    badge.textContent = cfg.label; badge.className = 'nav-role role-badge ' + cfg.badgeClass;
+    document.getElementById('nav-dot').className = 'nav-dot ' + cfg.dotClass;
+    const banner = document.getElementById('role-banner');
+    banner.className = cfg.bannerClass;
+    document.getElementById('banner-icon').textContent = cfg.icon + ' ';
+    document.getElementById('banner-text').textContent = cfg.text;
+    document.body.classList.remove('readonly');
+    if (role === 'persona') document.body.classList.add('readonly');
+    document.getElementById('edit-badge').style.display = role === 'persona' ? 'none' : '';
+    document.getElementById('type-opt-code').style.display = role === 'admin' ? '' : 'none';
+    document.getElementById('opt-editor').style.display = (role === 'admin' || role === 'editor') ? '' : 'none';
+    document.getElementById('opt-admin').style.display = role === 'admin' ? '' : 'none';
+    document.getElementById('btn-manage-users').style.display = (role === 'admin' || role === 'editor') ? '' : 'none';
+  }
+
+  function showApp() { document.getElementById('app').style.display = 'block'; loadContent(); document.getElementById('main-content').focus(); }
+
+  function doLogout() {
+    sessionStorage.removeItem('studio-user');
+    document.getElementById('app').style.display = 'none';
+    document.body.classList.remove('readonly');
+    document.getElementById('login-screen').style.cssText = '';
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('inp-user').value = ''; document.getElementById('inp-pw').value = '';
+    document.getElementById('login-error').classList.remove('show');
+    document.getElementById('btn-login').textContent = '[ ENTRAR ]';
+    document.getElementById('btn-login').classList.remove('loading');
+    showLoginForm();
+  }
+
+  function togglePw() { const i = document.getElementById('inp-pw'); i.type = i.type === 'password' ? 'text' : 'password'; }
+
+  function openUserModal() { renderUserList(); document.getElementById('user-modal').classList.add('open'); document.getElementById('new-username').value=''; document.getElementById('new-password').value=''; document.getElementById('new-role').value='persona'; document.getElementById('form-error').classList.remove('show'); }
+  function closeUserModal() { document.getElementById('user-modal').classList.remove('open'); }
+
+  function renderUserList() {
+    const users = getUsers();
+    const list = document.getElementById('user-list');
+    list.innerHTML = '';
+    Object.entries(users).forEach(([u, d]) => {
+      const cfg = ROLE_CONFIG[d.role];
+      const canDel = (currentRole === 'admin' && u !== currentUser) || (currentRole === 'editor' && d.role === 'persona');
+      const row = document.createElement('div');
+      row.className = 'user-row';
+      row.innerHTML = `<div><div class="user-row-name">${u}</div><div class="user-row-creds">Rol: ${cfg.label}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="nav-role role-badge ${cfg.badgeClass}">${cfg.label}</span>${canDel ? `<button class="btn-del-user" onclick="deleteUser('${u}')">Eliminar</button>` : ''}${u === currentUser ? '<span style="font-size:10px;color:var(--muted);font-family:var(--gaming)">TU</span>' : ''}</div>`;
+      list.appendChild(row);
+    });
+  }
+
+  function addUser() {
+    const username = document.getElementById('new-username').value.trim(), password = document.getElementById('new-password').value.trim(), role = document.getElementById('new-role').value;
+    const err = document.getElementById('form-error');
+    err.classList.remove('show');
+    if (!username || !password) { err.textContent = '⚠ Omple tots els camps.'; err.classList.add('show'); return; }
+    if (currentRole === 'editor' && role !== 'persona') { err.textContent = '⚠ Només pots crear Personas.'; err.classList.add('show'); return; }
+    const users = getUsers();
+    if (users[username]) { err.textContent = '⚠ Ja existeix.'; err.classList.add('show'); return; }
+    users[username] = { password, role };
+    saveUsers(users);
+    renderUserList();
+    showToast(`Usuari "${username}" creat ✓`);
+  }
+
+  function deleteUser(username) { if (username === currentUser) return; if (!confirm(`Segur que vols eliminar "${username}"?`)) return; const users = getUsers(); delete users[username]; saveUsers(users); renderUserList(); showToast(`Usuari "${username}" eliminat`); }
+  document.getElementById('user-modal').addEventListener('click', e => { if (e.target === document.getElementById('user-modal')) closeUserModal(); });
+
+  function createBlock(type, html = '') {
+    const wrap = document.createElement('div');
+    wrap.className = 'block'; wrap.dataset.type = type;
+    const btoolbar = document.createElement('div');
+    btoolbar.className = 'block-toolbar';
+    btoolbar.innerHTML = `${currentRole==='admin'?'<button class="bt-btn" onclick="changeType(this)">Tipus ↻</button>':''}<button class="bt-btn" onclick="moveBlock(this,-1)">↑</button><button class="bt-btn" onclick="moveBlock(this,1)">↓</button>${currentRole==='admin'?'<button class="bt-btn" onclick="deleteBlock(this)" style="color:#ff3366">✕</button>':''}`;
+    wrap.appendChild(btoolbar);
+
+    if (type === 'divider') { wrap.innerHTML += '<hr class="block-divider" />'; }
+    else if (type === 'image') { wrap.innerHTML += html&&html.startsWith('http') ? `<img src="${html}" class="block-image" style="max-width:100%;cursor:pointer" onclick="const u=prompt('URL:',this.src);if(u){this.src=u;triggerAutosave()}" />` : `<div class="block-image-placeholder" onclick="const u=prompt('URL:');if(u){this.outerHTML='<img src=\\'${u}\\' class=\\'block-image\\' style=\\'max-width:100%\\' />';triggerAutosave()}">🖼️ Clic per afegir imatge</div>`; }
+    else if (type === 'iframe') { wrap.innerHTML += html ? `<iframe src="${html}" class="block-iframe" allowfullscreen></iframe>` : `<div class="block-iframe-placeholder" onclick="const u=prompt('URL del joc (iframe):','https://');if(u){this.outerHTML='<iframe src=\\'${u}\\' class=\\'block-iframe\\' allowfullscreen></iframe>';triggerAutosave()}">🎮 Clic per afegir URL d'un joc (itch.io, etc.)</div>`; }
+    else if (type === 'pdf') { wrap.innerHTML += html ? `<iframe src="${html}" class="block-pdf"></iframe>` : `<div class="block-pdf-placeholder" onclick="const u=prompt('URL del PDF:','https://');if(u){this.outerHTML='<iframe src=\\'${u}\\' class=\\'block-pdf\\'></iframe>';triggerAutosave()}">📄 Clic per afegir URL d'un PDF</div>`; }
+    else if (type === 'video') { wrap.innerHTML += html ? `<iframe src="${html}" class="block-video" allowfullscreen></iframe>` : `<div class="block-video-placeholder" onclick="const u=prompt('URL del vídeo (YouTube embed):','https://www.youtube.com/embed/');if(u){this.outerHTML='<iframe src=\\'${u}\\' class=\\'block-video\\' allowfullscreen></iframe>';triggerAutosave()}">🎬 Clic per afegir URL d'un vídeo</div>`; }
+    else if (type === 'code' && currentRole !== 'admin') { wrap.innerHTML += `<div class="code-locked"><pre class="block-code" style="filter:blur(6px)">${html||''}</pre><div class="code-lock-overlay"><span class="lock-icon">🔒</span>Contingut restringit</div></div>`; }
+    else {
+      const tag = type==='p'?'p':type==='quote'?'blockquote':type==='code'?'pre':type;
+      wrap.innerHTML += `<${tag} class="block-${type}" contenteditable="true" data-placeholder="${({h1:'Títol...',h2:'Títol...',h3:'Subtítol...',p:'Escriu...',quote:'Cita...',code:'Codi...'})[type]}">${html}</${tag}>`;
+      const el = wrap.querySelector('[contenteditable]');
+      if (el) { el.addEventListener('focus', () => { selectBlock(wrap); document.getElementById('toolbar').classList.add('visible'); }); el.addEventListener('blur', () => setTimeout(() => { if (!document.activeElement?.closest('#toolbar')) document.getElementById('toolbar').classList.remove('visible'); }, 100)); el.addEventListener('input', triggerAutosave); }
+    }
+    wrap.addEventListener('click', () => selectBlock(wrap));
+    return wrap;
+  }
+
+  function selectBlock(b) { if (selectedBlock) selectedBlock.classList.remove('selected'); selectedBlock = b; b.classList.add('selected'); }
+  function deleteBlock(btn) { if (currentRole !== 'admin') return; btn.closest('.block').remove(); selectedBlock = null; triggerAutosave(); }
+  function moveBlock(btn, dir) { const b = btn.closest('.block'), sib = [...container.children], i = sib.indexOf(b), t = sib[i+dir]; if (!t) return; dir === -1 ? container.insertBefore(b,t) : container.insertBefore(t,b); triggerAutosave(); }
+  function changeType(btn) { if (currentRole !== 'admin') return; const b = btn.closest('.block'), cur = b.dataset.type, types = ['h1','h2','h3','p','quote','code','image','iframe','pdf','video'], next = types[(types.indexOf(cur)+1)%types.length], el = b.querySelector('[contenteditable]'), html = el ? el.innerHTML : '', nb = createBlock(next, html); container.insertBefore(nb, b); b.remove(); selectBlock(nb); triggerAutosave(); }
+  function addBlock(type) { if (type==='code'&&currentRole!=='admin') return; const b=createBlock(type,''); container.appendChild(b); togglePicker(); if(type==='iframe'||type==='pdf'||type==='video'){b.scrollIntoView({behavior:'smooth',block:'center'});} const el=b.querySelector('[contenteditable]'); if(el){b.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>el.focus(),300)} selectBlock(b); triggerAutosave(); }
+  function togglePicker() { document.getElementById('type-picker').classList.toggle('open'); }
+  function fmt(cmd) { document.execCommand(cmd, false, null); triggerAutosave(); }
+
+  function saveContent() {
+    if (currentRole === 'persona') return;
+    const data = {
+      heroTag: document.querySelector('.hero-tag')?.innerHTML || '',
+      heroTitle: document.querySelector('.hero-title')?.innerHTML || '',
+      heroSub: document.querySelector('.hero-sub')?.innerHTML || '',
+      sectionLabel: document.querySelector('.section-label')?.innerHTML || '',
+      blocks: [...container.querySelectorAll('.block')].map(b => {
+        const iframe = b.querySelector('.block-iframe, .block-pdf, .block-video');
+        if (iframe) return { type: b.dataset.type, html: iframe.src };
+        const imgEl = b.querySelector('.block-image');
+        if (imgEl) return { type: 'image', html: imgEl.src };
+        return { type: b.dataset.type, html: b.querySelector('[contenteditable]')?.innerHTML || '' };
+      })
+    };
+    localStorage.setItem('studio-content', JSON.stringify(data));
+    const saveBtn = document.getElementById('btn-save');
+    saveBtn.textContent = 'Desat ✓'; saveBtn.classList.add('saved');
+    setTimeout(() => { saveBtn.textContent = 'Desar'; saveBtn.classList.remove('saved'); }, 2000);
+  }
+
+  function triggerAutosave() { if (currentRole === 'persona') return; clearTimeout(autosaveTimer); autosaveTimer = setTimeout(() => saveContent(), 2000); }
+
+  function loadContent() {
+    container.innerHTML = '';
+    try {
+      const raw = localStorage.getItem('studio-content');
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.heroTag) document.querySelector('.hero-tag').innerHTML = d.heroTag;
+        if (d.heroTitle) document.querySelector('.hero-title').innerHTML = d.heroTitle;
+        if (d.heroSub) document.querySelector('.hero-sub').innerHTML = d.heroSub;
+        if (d.sectionLabel) document.querySelector('.section-label').innerHTML = d.sectionLabel;
+        if (d.blocks?.length) { d.blocks.forEach(b => container.appendChild(createBlock(b.type, b.html))); return; }
+      }
+    } catch(e) {}
+    [{ type: 'h1', text: 'El disseny comença<br>amb una <em>idea</em>' },{ type: 'p', text: 'Afegeix jocs amb el bloc 🎮 Iframe, PDFs amb 📄 PDF i vídeos amb 🎬 Vídeo.' },{ type: 'quote', text: 'El bon disseny és el mínim disseny possible.' }].forEach(b => container.appendChild(createBlock(b.type, b.text)));
+  }
+
+  function showToast(msg = 'Desat ✓') { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2400); }
+
+  document.addEventListener('click', e => {
+    const picker = document.getElementById('type-picker');
+    if (picker && !picker.contains(e.target) && e.target !== document.getElementById('add-btn')) picker.classList.remove('open');
+    if (!e.target.closest('.block') && selectedBlock) { selectedBlock.classList.remove('selected'); selectedBlock = null; }
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); if (currentRole !== 'persona') saveContent(); }
+    if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none' && !document.getElementById('login-screen').classList.contains('hidden')) doLogin();
+    if (e.key === 'Escape' && document.getElementById('user-modal').classList.contains('open')) closeUserModal();
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('studio-user');
+    const users = getUsers();
+    if (saved && users[saved]) { applyRole(saved, users[saved].role); document.getElementById('login-screen').style.display = 'none'; showApp(); }
+  });
+</script>
+</body>
+</html>
