@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Studio · Accés</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Syne:wght@400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -550,7 +550,7 @@
   const SUPABASE_URL = 'https://zormhpxwkgqxvntelebv.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_KG1n0yB9CDTCk68SF97Ziw_fFNTacEM';
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) || null;
 
   // ═══════════════════════════════════════════
   // VARIABLES GLOBALS
@@ -586,36 +586,47 @@
     const pw   = document.getElementById('inp-pw').value;
     const err  = document.getElementById('login-error');
     const btn  = document.getElementById('btn-login');
-    
+
     err.classList.remove('show');
     if (!user || !pw) {
       err.textContent = '⚠ Omple tots els camps.'; err.classList.add('show');
       return;
     }
 
+    if (!supabase) {
+      err.textContent = '⚠ Error de connexió. Recarrega la pàgina.'; err.classList.add('show');
+      return;
+    }
+
     btn.textContent = '[ VERIFICANT... ]'; btn.classList.add('loading');
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('username', user)
-      .eq('password', pw)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', user)
+        .eq('password', pw)
+        .single();
 
-    if (data && !error) {
-      sessionStorage.setItem('studio-user', user);
-      applyRole(user, data.role);
-      document.getElementById('login-screen').classList.add('hidden');
-      setTimeout(() => {
-        document.getElementById('login-screen').style.display = 'none';
-        showApp();
-      }, 600);
-    } else {
-      err.textContent = '⚠ Usuari o contrasenya incorrectes.';
+      if (data && !error) {
+        sessionStorage.setItem('studio-user', user);
+        applyRole(user, data.role);
+        document.getElementById('login-screen').classList.add('hidden');
+        setTimeout(() => {
+          document.getElementById('login-screen').style.display = 'none';
+          showApp();
+        }, 600);
+      } else {
+        err.textContent = '⚠ Usuari o contrasenya incorrectes.';
+        err.classList.add('show');
+        btn.textContent = '[ ENTRAR ]'; btn.classList.remove('loading');
+        const box = document.querySelector('.login-box');
+        box.style.animation = 'none'; box.offsetHeight; box.style.animation = 'shake 0.4s ease';
+      }
+    } catch(e) {
+      err.textContent = '⚠ Error de xarxa. Torna-ho a intentar.';
       err.classList.add('show');
       btn.textContent = '[ ENTRAR ]'; btn.classList.remove('loading');
-      const box = document.querySelector('.login-box');
-      box.style.animation = 'none'; box.offsetHeight; box.style.animation = 'shake 0.4s ease';
     }
   }
 
@@ -919,10 +930,10 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     const saved = sessionStorage.getItem('studio-user');
-    if (saved) {
+    if (saved && supabase) {
       supabase.from('users').select('*').eq('username', saved).single().then(({ data }) => {
         if (data) { applyRole(saved, data.role); document.getElementById('login-screen').style.display = 'none'; showApp(); }
-      });
+      }).catch(() => {});
     }
   });
 </script>
